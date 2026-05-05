@@ -1,0 +1,27 @@
+# 모델 가중치는 git이 아니라 HuggingFace Hub에서 받는다 (kbsooo/mjuclaw-intent-classifier).
+# Dockerfile이 빌드 시 huggingface_hub.snapshot_download 로 자동 download.
+model/
+
+# 학습 데이터 (synth-data 레포가 source). 본 레포에는 model serving + taxonomy만.
+data/
+
+# 평가 결과 / 캐시
+eval/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# 가상환경
+venv/
+.venv/
+env/
+.env
+
+# OS / 에디터 잡티
+.DS_Store
+.idea/
+.vscode/
+
+# ONNX export 산출물 (필요 시 /v1/export_onnx.py 로 재생성)
+*.onnx

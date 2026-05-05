@@ -1,0 +1,55 @@
+# intent-classifier taxonomy (v1)
+# single source of truth. 모델의 label id 순서는 이 파일이 정한다.
+version: v1
+base_model: beomi/KcELECTRA-base
+classes:
+  # --- service.* : mju-cli / mju-news 로 라우팅 ---
+  - id: 0
+    name: service.lms.unsubmitted
+    route: mju-cli lms +unsubmitted
+  - id: 1
+    name: service.lms.due_assignments
+    route: mju-cli lms +due-assignments
+  - id: 2
+    name: service.lms.unread_notices
+    route: mju-cli lms +unread-notices
+  - id: 3
+    name: service.lms.incomplete_online
+    route: mju-cli lms +incomplete-online
+  - id: 4
+    name: service.lms.digest
+    route: mju-cli lms +digest
+  - id: 5
+    name: service.ucheck.attendance
+    route: mju-cli ucheck attendance
+  - id: 6
+    name: service.msi.grades
+    route: mju-cli msi grades
+  - id: 7
+    name: service.msi.schedule
+    route: mju-cli msi schedule
+  - id: 8
+    name: service.library.search
+    route: mju-cli library search
+  - id: 9
+    name: service.library.my_loans
+    route: mju-cli library my-loans
+  - id: 10
+    name: service.news.recent
+    route: mju-news notices recent
+  - id: 11
+    name: service.news.search
+    route: mju-news notices search
+  - id: 12
+    name: service.cafeteria.today
+    route: mju-news cafeterias today
+
+  # --- LLM agent 대화로 처리 ---
+  - id: 13
+    name: chat
+    route: null  # openclaw agent가 그냥 응답
+
+  # --- 차단 ---
+  - id: 14
+    name: abuse
+    route: refuse  # 정형 거절 + 로그

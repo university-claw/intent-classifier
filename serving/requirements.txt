@@ -1,0 +1,12 @@
+fastapi==0.115.6
+uvicorn[standard]==0.32.1
+pydantic==2.10.3
+# CPU 전용 토치 — Linux 컨테이너에서 가벼운 빌드를 위해 +cpu 휠 사용.
+# Dockerfile에서 --extra-index-url 로 PyTorch CPU 인덱스를 추가한다.
+torch==2.5.1
+transformers==4.46.3
+tokenizers==0.20.3
+safetensors==0.4.5
+# BertTokenizerFast의 fallback 경로(slow tokenizer)에서 protobuf 필요.
+protobuf==5.28.3
+sentencepiece==0.2.0
