@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: Syntax and taxonomy checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Compile Python sources
+        run: python -m compileall serving v1
+
+      - name: Validate taxonomy
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path("taxonomy.yaml")
+          classes = []
+          current = None
+
+          for raw_line in path.read_text(encoding="utf-8").splitlines():
+              line = raw_line.split("#", 1)[0].strip()
+              if not line:
+                  continue
+              if line.startswith("- id:"):
+                  if current is not None:
+                      classes.append(current)
+                  current = {"id": int(line.split(":", 1)[1].strip())}
+              elif current is not None and line.startswith("name:"):
+                  current["name"] = line.split(":", 1)[1].strip().strip("\"'")
+              elif current is not None and line.startswith("route:"):
+                  route = line.split(":", 1)[1].strip()
+                  current["route"] = None if route == "null" else route
+
+          if current is not None:
+              classes.append(current)
+
+          ids = [entry["id"] for entry in classes]
+          expected_ids = list(range(len(classes)))
+          if ids != expected_ids:
+              raise SystemExit(f"class ids must be contiguous from 0: {ids}")
+
+          names = {entry.get("name") for entry in classes}
+          for required in ("chat", "abuse"):
+              if required not in names:
+                  raise SystemExit(f"missing required class: {required}")
+
+          if len(classes) != 15:
+              raise SystemExit(f"expected 15 classes, got {len(classes)}")
+          PY
