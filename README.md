@@ -16,6 +16,7 @@ mjuclaw Discord 봇의 한국어 의도 분류 + abuse 차단 모델.
 ```
 serving/          # FastAPI 추론 서버 + Dockerfile (mjuclaw-classifier 컨테이너)
 v1/               # 학습 / 분할 / ONNX export / HF upload 스크립트
+v2/               # binary safety classifier 실험/개발 라인
 taxonomy.yaml     # 라벨 정의 (single source of truth)
 model/            # gitignore — Dockerfile이 HF에서 자동 download
 data/             # gitignore — synth-data 레포가 source
@@ -63,3 +64,13 @@ python upload_hf.py        # HF Hub push
 ```
 
 학습 데이터는 [`synth-data`](../synth-data) 레포의 jsonl을 사용한다.
+
+## v2 safety classifier
+
+기존 v1 15-class intent classifier는 그대로 유지한다. 새 abuse gate 작업은
+[`v2/`](v2/) 아래에서 진행한다.
+
+- 라벨: `non_abuse`, `abuse`
+- 최종 결정: `p_abuse >= ABUSE_THRESHOLD`
+- router 호환 필드: `final`, `p_abuse`, `overridden_to_abuse`, `top`, `latency_ms`
+- 개발용 compose build: `mjuclaw-setup`은 `intent-classifier/v2/serving/Dockerfile`을 사용한다.

@@ -7,6 +7,8 @@ data/
 
 # 평가 결과 / 캐시
 eval/
+ckpt/
+*.log
 __pycache__/
 *.pyc
 *.pyo
