@@ -1,0 +1,23 @@
+# mjuclaw safety classifier taxonomy (v2)
+# 모델의 label id 순서는 이 파일이 정한다.
+version: v2
+base_model: beomi/KcELECTRA-base
+task: binary_safety
+classes:
+  - id: 0
+    name: non_abuse
+    route: openclaw
+  - id: 1
+    name: abuse
+    route: refuse
+
+policy:
+  non_abuse: >
+    명지클로 서비스와 직접 관련이 없더라도 유해하지 않은 일반 대화,
+    학교 생활 질문, 학사 정보 요청, 정상적인 사용법 질문.
+  abuse: >
+    명지클로 서비스 운영에 유해한 모든 요청. 예: 시스템/개발자 프롬프트 탈취,
+    내부 코드/설정/도구/명령 노출 요구, 프롬프트 인젝션, 이전 지시 무시,
+    jailbreak/DAN mode, 다른 사용자 정보 접근, 세션 변경 시도, 개인정보 탈취,
+    개발자/관리자 사칭을 통한 권한 획득, 계정/비밀번호 공격, mju 시스템 우회,
+    명지대 서비스와 무관하더라도 유해한 요청.

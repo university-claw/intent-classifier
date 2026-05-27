@@ -1,0 +1,10 @@
+# 학습용 (Kaggle 또는 로컬 M4)
+# Kaggle은 이미 torch/transformers 설치돼있음 → 추가만 하면 됨
+transformers>=4.44
+datasets>=2.18
+scikit-learn>=1.4
+accelerate>=0.30
+peft>=0.11       # transformers.trainer가 선제 import하므로 버전 맞춰둠
+# ONNX export
+onnx>=1.16
+onnxruntime>=1.17

@@ -30,9 +30,12 @@ jobs:
           python-version: "3.11"
 
       - name: Compile Python sources
-        run: python -m compileall serving v1
+        run: python -m compileall serving v1 v2
 
-      - name: Validate taxonomy
+      - name: Run v2 contract tests
+        run: cd v2 && python -m unittest discover -s tests
+
+      - name: Validate v1 taxonomy
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -72,6 +75,42 @@ jobs:
               raise SystemExit(f"expected 15 classes, got {len(classes)}")
           PY
 
+      - name: Validate v2 taxonomy
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path("v2/taxonomy.yaml")
+          classes = []
+          current = None
+
+          for raw_line in path.read_text(encoding="utf-8").splitlines():
+              line = raw_line.split("#", 1)[0].strip()
+              if not line:
+                  continue
+              if line.startswith("- id:"):
+                  if current is not None:
+                      classes.append(current)
+                  current = {"id": int(line.split(":", 1)[1].strip())}
+              elif current is not None and line.startswith("name:"):
+                  current["name"] = line.split(":", 1)[1].strip().strip("\"'")
+              elif current is not None and line.startswith("route:"):
+                  route = line.split(":", 1)[1].strip()
+                  current["route"] = None if route == "null" else route
+
+          if current is not None:
+              classes.append(current)
+
+          ids = [entry["id"] for entry in classes]
+          expected_ids = list(range(len(classes)))
+          if ids != expected_ids:
+              raise SystemExit(f"class ids must be contiguous from 0: {ids}")
+
+          names = [entry.get("name") for entry in classes]
+          if names != ["non_abuse", "abuse"]:
+              raise SystemExit(f"expected binary safety labels, got {names}")
+          PY
+
   docker-build:
     name: Docker build and publish
     runs-on: ubuntu-latest
@@ -104,8 +143,13 @@ jobs:
       - name: Build and optionally publish Docker image
         uses: docker/build-push-action@v6
         with:
-          context: .
-          file: serving/Dockerfile
+          context: ./v2
+          file: ./v2/serving/Dockerfile
+          secrets: |
+            hf_token=${{ secrets.HF_TOKEN }}
+          build-args: |
+            MODEL_REPO_ID=${{ vars.CLASSIFIER_MODEL_REPO_ID || 'nullhyeon/mjuclaw-safety-classifier' }}
+            MODEL_REVISION=${{ vars.CLASSIFIER_MODEL_REVISION || 'main' }}
           load: ${{ github.event_name != 'push' || github.ref != 'refs/heads/main' }}
           push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
           tags: ${{ steps.meta.outputs.tags }}
