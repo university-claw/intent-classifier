@@ -32,17 +32,21 @@ PRIVATE = os.environ.get("HF_PRIVATE", "true").lower() not in ("0", "false", "no
 HERE = Path(__file__).resolve().parent
 MODEL_DIR = Path(os.environ.get("MODEL_DIR", HERE / "ckpt" / "best"))
 DATA_DIR = Path(os.environ.get("DATA_DIR", HERE.parent / "data" / "v2"))
+RAW_DATA_DIR = Path(os.environ.get("RAW_DATA_DIR", HERE.parent.parent / "synth-data"))
 
 print(f"model repo:   {MODEL_REPO}")
 print(f"dataset repo: {DATASET_REPO}")
 print(f"private:      {PRIVATE}")
 print(f"model dir:    {MODEL_DIR}")
 print(f"data dir:     {DATA_DIR}")
+print(f"raw data dir: {RAW_DATA_DIR}")
 
 if not MODEL_DIR.exists():
     raise SystemExit(f"MODEL_DIR does not exist: {MODEL_DIR}")
 if not DATA_DIR.exists():
     raise SystemExit(f"DATA_DIR does not exist: {DATA_DIR}")
+if not RAW_DATA_DIR.exists():
+    raise SystemExit(f"RAW_DATA_DIR does not exist: {RAW_DATA_DIR}")
 
 #%% 1) 데이터셋 업로드 (모델 카드가 dataset을 참조할 수 있으므로 먼저)
 create_repo(DATASET_REPO, repo_type="dataset", exist_ok=True, private=PRIVATE)
@@ -51,6 +55,13 @@ api.upload_folder(
     repo_id=DATASET_REPO,
     repo_type="dataset",
     commit_message="Release safety dataset: binary abuse/non_abuse Korean samples",
+)
+api.upload_folder(
+    folder_path=str(RAW_DATA_DIR),
+    path_in_repo="raw",
+    repo_id=DATASET_REPO,
+    repo_type="dataset",
+    commit_message="Release raw safety dataset sources",
 )
 print(f"✓ dataset: https://huggingface.co/datasets/{DATASET_REPO}")
 
