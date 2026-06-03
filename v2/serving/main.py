@@ -34,6 +34,7 @@ from .contract import (
     validate_label_map,
     validate_probability,
 )
+from .library_companion_allow import is_library_companion_student_id_submission
 
 # Mac libomp 중복 링크 회피 (Linux 컨테이너에선 무해).
 os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
@@ -187,6 +188,19 @@ def classify(
 ) -> ClassifyResponse:
     _verify_auth(authorization)
     result = _predict(req.text, req.top_k)
+    if (
+        result["final"] == ABUSE_LABEL
+        and is_library_companion_student_id_submission(req.text)
+    ):
+        # 도서관 스터디룸 예약은 사용자가 동반자 이름/학번을 직접 제공해야 한다.
+        # 내부 데이터 조회가 아닌 직접 제공 목록이면 모델의 PII abuse 판정을 통과시킨다.
+        logger.info(
+            "library companion allow override: p_abuse=%.3f text_len=%d",
+            result["p_abuse"],
+            len(req.text),
+        )
+        result["final"] = "non_abuse"
+        result["overridden_to_abuse"] = False
     if result["overridden_to_abuse"]:
         # 너무 많이 찍힐 수 있으니 메시지 본문은 요약만 로그.
         logger.info(
